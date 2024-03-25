@@ -1,31 +1,26 @@
-baseUrl = '/api/recursos/v1';
-semillaPath = '/boleta.electronica.semilla';
-tokenPath = '/boleta.electronica.token';
-const dataObject = {};
+const baseUrl = '/api/recursos/v1';
+const semillaPath = '/boleta.electronica.semilla';
+const tokenPath = '/boleta.electronica.token';
+import axios from 'axios';
+import $ from 'jquery';
 
+const parser = new DOMParser();
+
+const dataObject = {};
 async function fetchData() {
   try {
-    return fetch(`${baseUrl}${semillaPath}`)
-      .then(res => {
-        dataObject.response = res;
-        return res.text();
-      })
-      .then(dataAsText => {
-        dataObject.dataAsText = dataAsText;
-        return new DOMParser().parseFromString(dataAsText, 'text/xml');
-      });
+    return await axios.get(`${baseUrl}${semillaPath}`);
   } catch (error) {
-    console.error('Error fetching the seed:', error);
+    console.log(`Error fetching seed: ${error}`);
   }
 }
 
 async function handleFetchData() {
   try {
-    const fetchedXmlDoc = await fetchData();
-    dataObject.xmlVersion = dataObject.dataAsText.slice(
-      0,
-      dataObject.dataAsText.indexOf('>') + 1
-    );
+    dataObject.response = await fetchData();
+    const xmlDataAsString = dataObject.response.data;
+    const fetchedXmlDoc = parser.parseFromString(xmlDataAsString, 'text/xml');
+    dataObject.xmlVersion = xmlDataAsString.slice(0, xmlDataAsString.indexOf('>') + 1);
     dataObject.fetchedXmlDoc = fetchedXmlDoc;
     dataObject.semilla = fetchedXmlDoc.getElementsByTagName('SEMILLA')[0].textContent;
     dataObject.estado = fetchedXmlDoc.getElementsByTagName('ESTADO')[0].textContent;
@@ -53,6 +48,57 @@ async function handleFetchData() {
   }
   console.log(dataObject.postXmlDoc);
 })();
+
+// async function fetchData() {
+//   try {
+//     return fetch(`${baseUrl}${semillaPath}`)
+//       .then(res => {
+//         dataObject.response = res;
+//         return res.text();
+//       })
+//       .then(dataAsText => {
+//         dataObject.dataAsText = dataAsText;
+//         return new DOMParser().parseFromString(dataAsText, 'text/xml');
+//       });
+//   } catch (error) {
+//     console.error('Error fetching the seed:', error);
+//   }
+// }
+
+// async function handleFetchData() {
+//   try {
+//     const fetchedXmlDoc = await fetchData();
+//     dataObject.xmlVersion = dataObject.dataAsText.slice(
+//       0,
+//       dataObject.dataAsText.indexOf('>') + 1
+//     );
+//     dataObject.fetchedXmlDoc = fetchedXmlDoc;
+//     dataObject.semilla = fetchedXmlDoc.getElementsByTagName('SEMILLA')[0].textContent;
+//     dataObject.estado = fetchedXmlDoc.getElementsByTagName('ESTADO')[0].textContent;
+//     dataObject.htmlCollection = fetchedXmlDoc.getElementsByTagNameNS('*', '*');
+//     dataObject.urlAttribute = dataObject.htmlCollection[0].getAttribute('xmlns:SII');
+//     dataObject.xmlString = `${dataObject.xmlVersion}
+//     <getToken><item><Semilla>${dataObject.semilla}</Semilla></item></getToken>`;
+
+//     return dataObject;
+//   } catch (error) {
+//     console.error('Error handling the fetch data:', error);
+//   }
+// }
+
+// (async function generateXml() {
+//   const dataObject = await handleFetchData();
+//   dataObject.postXmlDoc = $.parseXML(dataObject.xmlString);
+// })();
+
+// (async function printData() {
+//   const dataObject = await handleFetchData();
+//   console.log(dataObject.fetchedXmlDoc);
+//   for (const key of Object.entries(dataObject)) {
+//     console.log(key);
+//   }
+//   console.log(dataObject.postXmlDoc);
+// })();
 
 // const fs = require('fs');
 // const { SignedXml } = require('xml-crypto');

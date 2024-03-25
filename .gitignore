@@ -1,3 +1,4 @@
 /node_modules
-/assets
+/backend/assets
+/backend/node_modules
 /dist
